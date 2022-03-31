@@ -10,6 +10,7 @@ from .classifier import Classifier
 from .comatch import CoMatch
 from .fixmatch import FixMatch
 from .fixmatch_ccssl import FixMatchCCSSL
+from .comatch_ccssl import CoMatchCCSSL
 
 # meta archs for all trainers
 meta_archs = {
@@ -17,6 +18,7 @@ meta_archs = {
     "CoMatch": CoMatch,
     "Classifier": Classifier,
     "FixMatchCCSSL": FixMatchCCSSL,
+    "CoMatchCCSSL":CoMatchCCSSL,
 }
 
 
