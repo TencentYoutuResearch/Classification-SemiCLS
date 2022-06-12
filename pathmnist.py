@@ -13,29 +13,23 @@ from .transforms.randaugment import RandAugmentMC
 
 # split CIFAR10 into labled/unlabed/val set
 def get_pathmnist(args, root):
-    transform_labeled = transforms.Compose([
+    transform_all = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[.5], std=[.5])
     ])
-    transform_val = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[.5], std=[.5])
-    ])
+    
     base_dataset = medmnist.dataset.PathMNIST(split='train', download=True)
 
     train_labeled_idxs, train_unlabeled_idxs = x_u_split(
-        args, base_dataset.targets)
+        args, base_dataset.labels)
 
-    train_labeled_dataset = CIFAR10SSL(
-        root, train_labeled_idxs, train=True,
-        transform=transform_labeled)
+    train_labeled_dataset = PATHMNISTSSL(
+        root, train_labeled_idxs, transform=transform_all)
 
-    train_unlabeled_dataset = CIFAR10SSL(
-        root, train_unlabeled_idxs, train=True,
-        transform=TransformFixMatch(mean=cifar10_mean, std=cifar10_std))
+    train_unlabeled_dataset = PATHMNISTSSL(
+        root, train_unlabeled_idxs , transform=transform_all)
 
-    test_dataset = datasets.CIFAR10(
-        root, train=False, transform=transform_val, download=False)
+    test_dataset = medmnist.dataset.PathMNIST( split='test', transform=transform_all, download=False)
 
     return train_labeled_dataset, train_unlabeled_dataset, test_dataset
 
@@ -61,32 +55,21 @@ def get_pathmnist(args, root):
         labeled_idx = np.hstack([labeled_idx for _ in range(num_expand_x)])
     np.random.shuffle(labeled_idx)
     return labeled_idx, unlabeled_idx
-  class CIFAR10SSL(datasets.CIFAR10):
-    def __init__(self, root, indexs, train=True,
-                 transform=None, target_transform=None,
-                 download=False,
-                 anno_file=None):
-        super().__init__(root, train=train,
+
+  class PATHMNISTSSL(medmnist.dataset.PathMNIST):
+    def __init__(self, indexs, transform=None, target_transform=None,
+                 download=False):
+        super().__init__(split='train',
                          transform=transform,
                          target_transform=target_transform,
                          download=download)
         if indexs is not None:
             self.data = self.data[indexs]
-            self.targets = np.array(self.targets)[indexs]
+            self.labels = np.array(self.labels)[indexs]
 
-        # the highest prioirty for loading data from file
-        if anno_file is not None:
-            logging.info("Loading from file {}".format(anno_file))
-            anno_data = np.load(anno_file, allow_pickle=True).item()
-            self.data = np.array(anno_data["data"])
-            self.targets = np.array(anno_data["label"])
-            if len(self.data) < 64:
-                repeat_num = 64//len(self.data) + 1
-                self.data = np.tile(self.data, [repeat_num, 1, 1, 1])
-                self.targets = np.tile(self.targets, repeat_num)
 
     def __getitem__(self, index):
-        img, target = self.data[index], self.targets[index]
+        img, target = self.data[index], self.labels[index]
         img = Image.fromarray(img)
 
         if self.transform is not None:
@@ -96,6 +79,6 @@ def get_pathmnist(args, root):
             target = self.target_transform(target)
 
         return img, target
-      DATASET_GETTERS = {'cifar10': get_cifar10,
-                   'cifar100': get_cifar100}
+    
+      DATASET_GETTERS = {'pathmnist': get_pathmnist}
       
