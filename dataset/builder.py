@@ -15,6 +15,7 @@ dataset_cfg:
 from torchvision import datasets
 
 from dataset.cifar import CIFAR10SSL, CIFAR100SSL, x_u_split
+from dataset.pathmnist import get_pathmnist
 from dataset.imagenet import get_imagenet_ssl_dataset
 from dataset.MyDataset import MyDataset
 from dataset.stl10 import get_stl10
@@ -76,6 +77,9 @@ def build(cfg):
             transform_labeled=transform_labeled,
             transform_ulabeled=transform_ulabeled,
             transform_val=transform_val)
+    
+    elif cfg.type == "PATHMNIST":
+        return get_pathmnist(cfg)
 
     else:
 
