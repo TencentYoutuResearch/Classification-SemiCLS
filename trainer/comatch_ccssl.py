@@ -95,7 +95,7 @@ class CoMatchCCSSL(Trainer):
         probs_orig = probs.clone()
         return probs,probs_orig
     
-    def memory_smoothing(self,feats_u_w):
+    def memory_smoothing(self, feats_u_w, probs):
         A = torch.exp(
             torch.mm(feats_u_w, self.queue_feats.t()) /
             self.temperature)
@@ -182,11 +182,11 @@ class CoMatchCCSSL(Trainer):
         # other losses
         with torch.no_grad():
             logits_u_w,feats_x,feats_u_w= logits_u_w.detach(),feats_x.detach(),feats_u_w.detach()
-            probs,probs_orig = self.DA(logits_u_w)
+            probs, probs_orig = self.DA(logits_u_w)
 
             # memory-smoothing using feature similairty
             if epoch > 0 or iter > self.queue_batch:
-                probs = self.memory_smoothing(feats_u_w)
+                probs = self.memory_smoothing(feats_u_w, probs)
 
             # get pseudo label and mask
             # note here the label is soft, hard label is for acc calculation
