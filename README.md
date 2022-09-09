@@ -119,11 +119,13 @@ Code examples are as follow:
 ## BibTex Citation
 If you think our work or this code is helpful for your research, please cite its arxiv version using the following BibTex (we will update its CVPR 2022 version later):
 ```
-@article{yang2022class,
-  title={Class-Aware Contrastive Semi-Supervised Learning},
-  author={Yang, Fan and Wu, Kai and Zhang, Shuyi and Jiang, Guannan and Liu, Yong and Zheng, Feng and Zhang, Wei and Wang, Chengjie and Zeng, Long},
-  journal={arXiv preprint arXiv:2203.02261},
-  year={2022}
+@InProceedings{Yang_2022_CVPR,
+    author    = {Yang, Fan and Wu, Kai and Zhang, Shuyi and Jiang, Guannan and Liu, Yong and Zheng, Feng and Zhang, Wei and Wang, Chengjie and Zeng, Long},
+    title     = {Class-Aware Contrastive Semi-Supervised Learning},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2022},
+    pages     = {14421-14430}
 }
 ```
 
