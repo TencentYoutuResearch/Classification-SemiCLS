@@ -45,12 +45,11 @@ class FixMatchCCSSL(Trainer):
 
         # to use background re-weighting, will releaase SupConLoss Later
         # if self.contrast_with_softlabel:
-            # self.loss_contrast = SoftSupConLoss(
-            #     temperature=self.cfg.temperature)
+        # self.loss_contrast = SoftSupConLoss(
+        #     temperature=self.cfg.temperature)
         # else:
         #     self.loss_contrast = SupConLoss(temperature=self.cfg.temperature)
-        self.loss_contrast = SoftSupConLoss(
-            temperature=self.cfg.temperature)
+        self.loss_contrast = SoftSupConLoss(temperature=self.cfg.temperature)
 
         # pseudo with ema, this will intrige bad results and not used in paper
         self.pseudo_with_ema = False
@@ -104,8 +103,9 @@ class FixMatchCCSSL(Trainer):
             raise ValueError("Unsupported psuedo with ema mode in exp type")
         else:
             # inference once for all
-            inputs = torch.cat([inputs_x_w, inputs_u_w, inputs_u_s, inputs_u_s1],
-                               dim=0).to(self.device)
+            inputs = torch.cat(
+                [inputs_x_w, inputs_u_w, inputs_u_s, inputs_u_s1],
+                dim=0).to(self.device)
             logits, features = model(inputs)
             logits_x = logits[:batch_size]
             logits_u_w, logits_u_s, _ = logits[batch_size:].chunk(3)
@@ -138,24 +138,29 @@ class FixMatchCCSSL(Trainer):
                 if self.cfg.get("contrast_left_out", False):
                     with torch.no_grad():
                         select_matrix = self.contrast_left_out(max_probs)
-                    Lcontrast = self.loss_contrast(
-                        features, max_probs, labels, select_matrix=select_matrix)
+                    Lcontrast = self.loss_contrast(features,
+                                                   max_probs,
+                                                   labels,
+                                                   select_matrix=select_matrix)
 
                 elif self.cfg.get("contrast_with_thresh", False):
-                    contrast_mask = max_probs.ge(self.cfg.contrast_with_thresh).float()
-                    Lcontrast = self.loss_contrast(
-                        features, max_probs, labels, reduction=None)
+                    contrast_mask = max_probs.ge(
+                        self.cfg.contrast_with_thresh).float()
+                    Lcontrast = self.loss_contrast(features,
+                                                   max_probs,
+                                                   labels,
+                                                   reduction=None)
                     Lcontrast = (Lcontrast * contrast_mask).mean()
 
                 else:
-                    Lcontrast = self.loss_contrast(
-                        features, max_probs, labels)
+                    Lcontrast = self.loss_contrast(features, max_probs, labels)
             else:
                 if self.cfg.get("contrast_left_out", False):
                     with torch.no_grad():
                         select_matrix = self.contrast_left_out(max_probs)
-                    Lcontrast = self.loss_contrast(
-                        features, labels, select_matrix=select_matrix)
+                    Lcontrast = self.loss_contrast(features,
+                                                   labels,
+                                                   select_matrix=select_matrix)
                 else:
                     Lcontrast = self.loss_contrast(features, labels)
 
@@ -191,16 +196,27 @@ class FixMatchCCSSL(Trainer):
 
         return loss_dict
 
-    def contrast_left_out(self,max_probs):
+    def contrast_left_out(self, max_probs):
+        """contrast_left_out
+
+        If contrast_left_out, will select positive pairs based on
+            max_probs > contrast_with_thresh, others will set to 0
+            later max_probs will be used to re-weight the contrastive loss
+
+        Args:
+            max_probs (torch Tensor): prediction probabilities
+
+        Returns:
+            select_matrix: select_matrix with probs < contrast_with_thresh set
+                to 0
+        """
         contrast_mask = max_probs.ge(self.cfg.contrast_with_thresh).float()
         contrast_mask2 = torch.clone(contrast_mask)
         contrast_mask2[contrast_mask == 0] = -1
-        select_elements = torch.eq(
-            contrast_mask2.reshape([-1, 1]), contrast_mask.reshape([-1, 1]).T).float()
+        select_elements = torch.eq(contrast_mask2.reshape([-1, 1]),
+                                   contrast_mask.reshape([-1, 1]).T).float()
         select_elements += torch.eye(contrast_mask.shape[0]).to(self.device)
         select_elements[select_elements > 1] = 1
-        select_matrix = torch.ones(
-            contrast_mask.shape[0]).to(self.device) * select_elements
+        select_matrix = torch.ones(contrast_mask.shape[0]).to(
+            self.device) * select_elements
         return select_matrix
-
-
