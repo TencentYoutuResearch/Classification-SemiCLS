@@ -52,6 +52,10 @@ class SoftSupConLoss(nn.Module):
             mask = torch.eq(labels, labels.T).float().to(device)
             max_probs = max_probs.contiguous().view(-1, 1)
             score_mask = torch.matmul(max_probs, max_probs.T)
+            # Some may find that the line 59 is different with eq(6)
+            # Acutuall the final mask will set weight=0 when i=j, following Eq(8) in paper
+            # For more details, please see issue 9
+            # https://github.com/TencentYoutuResearch/Classification-SemiCLS/issues/9
             mask = mask.mul(score_mask) * select_matrix
 
         elif labels is not None:
