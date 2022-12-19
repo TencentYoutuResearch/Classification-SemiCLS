@@ -55,7 +55,12 @@ class SoftSupConLoss(nn.Module):
             # Some may find that the line 59 is different with eq(6)
             # Acutuall the final mask will set weight=0 when i=j, following Eq(8) in paper
             # For more details, please see issue 9
+
+            # Set diagional to 1 to be same with eq(8) as in issue 9
             # https://github.com/TencentYoutuResearch/Classification-SemiCLS/issues/9
+            # Not that our results in paper doesn't have following line and should
+            # mathematically be better after adding.
+            score_mask = score_mask.fill_diagonal_(1)
             mask = mask.mul(score_mask) * select_matrix
 
         elif labels is not None:
@@ -66,6 +71,11 @@ class SoftSupConLoss(nn.Module):
             #max_probs = max_probs.reshape((batch_size,1))
             max_probs = max_probs.contiguous().view(-1, 1)
             score_mask = torch.matmul(max_probs,max_probs.T)
+            # Set diagional to 1 to be same with eq(8) as in issue
+            # https://github.com/TencentYoutuResearch/Classification-SemiCLS/issues/9
+            # Not that our results in paper doesn't have following line and should
+            # mathematically be better after adding.
+            score_mask = score_mask.fill_diagonal_(1)
             mask = mask.mul(score_mask)
         else:
             mask = mask.float().to(device)
